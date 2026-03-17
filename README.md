@@ -1,5 +1,4 @@
 🧠 Brain Tumor Detection Model
-📌 Overview
 
 This project is a Brain Tumor Detection System that uses a Convolutional Neural Network (CNN) to analyze MRI brain scans and predict whether a tumor is present or not.
 The model is designed to assist in early detection by identifying abnormal patterns in medical images.
