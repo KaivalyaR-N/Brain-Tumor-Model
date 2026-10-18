@@ -71,8 +71,13 @@ cd brain-tumor-detection
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the model
-python app.py
+# Run the app (Streamlit frontend)
+streamlit run app.py
+
+# Pages:
+#   • Upload & Scan      — upload MRI, prediction + confidence + Grad-CAM heatmap
+#   • Training Results   — epoch-by-epoch training/test metrics and analysis
+
 📁 Project Structure
 brain-tumor-detection/
 │── model/
