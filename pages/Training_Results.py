@@ -147,7 +147,7 @@ epochs = list(range(1, len(hist["accuracy"]) + 1))
 c1, c2, c3, c4, c5 = st.columns(5, gap="medium")
 c1.markdown(
     f'<div class="info-card"><div class="card-title">Epochs</div>'
-    f'<div class="card-value">{cfg.get("epochs", len(epochs))}</div></div>',
+    f'<div class="card-value">{cfg.get("epochs_run", cfg.get("epochs", len(epochs)))}</div></div>',
     unsafe_allow_html=True,
 )
 c2.markdown(
@@ -319,8 +319,11 @@ st.markdown(
 st.markdown("### Testing Results (held-out validation set)")
 rep = eval_res["classification_report"]
 cm = eval_res["confusion_matrix"]
+threshold = eval_res.get("threshold", 0.5)
+sens = eval_res.get("sensitivity", rep.get("tumor", {}).get("recall", 0))
+spec = eval_res.get("specificity", rep.get("no_tumor", {}).get("recall", 0))
 
-m1, m2, m3 = st.columns(3, gap="medium")
+m1, m2, m3, m4, m5 = st.columns(5, gap="medium")
 m1.markdown(
     f'<div class="info-card"><div class="card-title">Val Accuracy</div>'
     f'<div class="card-value good">{rep["accuracy"]*100:.1f}%</div></div>',
@@ -332,8 +335,20 @@ m2.markdown(
     unsafe_allow_html=True,
 )
 m3.markdown(
-    f'<div class="info-card"><div class="card-title">Val Images</div>'
-    f'<div class="card-value">{int(sum(sum(r) for r in cm))}</div></div>',
+    f'<div class="info-card"><div class="card-title">Threshold</div>'
+    f'<div class="card-value warn">{threshold:.2f}</div></div>',
+    unsafe_allow_html=True,
+)
+m4.markdown(
+    f'<div class="info-card"><div class="card-title">Sensitivity</div>'
+    f'<div class="card-value good">{sens*100:.1f}%</div>'
+    f'<div class="card-sub">tumors caught</div></div>',
+    unsafe_allow_html=True,
+)
+m5.markdown(
+    f'<div class="info-card"><div class="card-title">Specificity</div>'
+    f'<div class="card-value">{spec*100:.1f}%</div>'
+    f'<div class="card-sub">healthy cleared</div></div>',
     unsafe_allow_html=True,
 )
 

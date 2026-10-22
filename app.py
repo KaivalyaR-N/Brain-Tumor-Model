@@ -219,8 +219,17 @@ with st.sidebar:
 def load_model():
     return tf.keras.models.load_model("brain_tumor_model.h5")
 
+@st.cache_data
+def load_threshold():
+    try:
+        with open("evaluation_results.json") as f:
+            return float(json.load(f).get("threshold", 0.5))
+    except Exception:
+        return 0.5
+
 try:
     model = load_model()
+    THRESHOLD = load_threshold()
 except Exception as e:
     st.error(f"Failed to load model: {e}")
     st.stop()
@@ -245,7 +254,7 @@ if uploaded_file is not None:
         heatmap, _ = grad_cam(model, x)
         tumor_prob = float(model.predict(x, verbose=0)[0][0])
         no_tumor_prob = 1.0 - tumor_prob
-        is_tumor = tumor_prob > 0.5
+        is_tumor = tumor_prob > THRESHOLD
         confidence = (tumor_prob if is_tumor else no_tumor_prob) * 100
 
     # ── Verdict banner ──
@@ -301,8 +310,8 @@ if uploaded_file is not None:
     )
     m3.markdown(
         f'<div class="info-card"><div class="card-title">Decision Threshold</div>'
-        f'<div class="card-value">50%</div>'
-        f'<div class="card-sub">sigmoid cut-off</div></div>',
+        f'<div class="card-value">{THRESHOLD*100:.0f}%</div>'
+        f'<div class="card-sub">tuned for high sensitivity</div></div>',
         unsafe_allow_html=True,
     )
     region = tumor_region(heatmap, threshold=0.3)
@@ -357,10 +366,12 @@ if uploaded_file is not None:
             f"""
             1. Image resized to **150×150** and normalized to `[0,1]`.
             2. The CNN outputs a raw **sigmoid score** `p` ∈ (0,1) — here **{tumor_prob:.4f}**.
-            3. If `p > 0.5` → **Tumor**, confidence = `p×100`;
-               if `p ≤ 0.5` → **No Tumor**, confidence = `(1−p)×100`.
+            3. Decision threshold is **{THRESHOLD:.2f}** (tuned for high sensitivity —
+               missing a tumor is worse than a false alarm):
+               if `p > {THRESHOLD:.2f}` → **Tumor**, confidence = `p×100`;
+               if `p ≤ {THRESHOLD:.2f}` → **No Tumor**, confidence = `(1−p)×100`.
             4. This scan's **{confidence:.1f}%** means the score landed
-               **{abs(tumor_prob - 0.5):.4f}** away from the 0.5 boundary —
+               **{abs(tumor_prob - THRESHOLD):.4f}** away from the {THRESHOLD:.2f} boundary —
                larger distance ⇒ more confident the model is.
             5. The heatmap comes from **Grad-CAM**: gradients of the output w.r.t.
                the last conv layer, pooled and weighted into a saliency map of
